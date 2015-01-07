@@ -30,4 +30,4 @@ SOURCES = \
 	test-sgen.c
 
 test-sgen : $(SOURCES)
-	clang -o test-sgen -Wall -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"simple-client.h\" -DSGEN_WITHOUT_MONO -O0 -g -I. -I./mono/ `pkg-config --cflags --libs glib-2.0` $(SOURCES)
+	gcc -o test-sgen -Wall -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"simple-client.h\" -DSGEN_WITHOUT_MONO -O0 -g -I. -I./mono/ $(SOURCES) `pkg-config --cflags --libs glib-2.0` -lpthread -lm
