@@ -14,6 +14,11 @@ struct _GCObject {
 };
 
 typedef struct {
+	GCVTable *vtable;
+	size_t size;
+} GCArray;
+
+typedef struct {
 } SgenClientThreadInfo;
 
 #define SGEN_LOAD_VTABLE_UNCHECKED(obj)	((void*)(((GCObject*)(obj))->vtable))
@@ -27,6 +32,8 @@ sgen_vtable_get_descriptor (GCVTable *vtable)
 static mword
 sgen_client_slow_object_get_size (GCVTable *vtable, GCObject* o)
 {
+	if ((vtable->descriptor & DESC_TYPE_MASK) == DESC_TYPE_VECTOR)
+		return ((GCArray*)o)->size;
 	return sizeof (GCObject);
 }
 
