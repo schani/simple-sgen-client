@@ -156,11 +156,11 @@ sgen_client_degraded_allocation (size_t size)
 }
 
 void
-sgen_client_total_allocated_heap (mword allocated_heap)
+sgen_client_total_allocated_heap_changed (size_t allocated_heap)
 {
 }
 
-gpointer
+void
 sgen_client_out_of_memory (size_t size)
 {
 	g_assert_not_reached ();
@@ -282,16 +282,14 @@ mono_gc_register_thread (void *baseptr)
 	return TRUE;
 }
 
-int
+void
 sgen_client_stop_world (int generation)
 {
-	return 0;
 }
 
-int
+void
 sgen_client_restart_world (int generation, GGTimingInfo *timing)
 {
-	return 0;
 }
 
 gboolean
