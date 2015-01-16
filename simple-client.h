@@ -148,13 +148,6 @@ sgen_client_array_length (GCObject *obj)
 	g_assert_not_reached ();
 }
 
-/* FIXME: Why do we even need this?  Can't we get it from the descriptor? */
-static inline gboolean
-sgen_client_vtable_has_references (GCVTable *vt)
-{
-	return TRUE;
-}
-
 static inline void
 sgen_client_pre_copy_checks (char *destination, GCVTable *gc_vtable, void *obj, mword objsize)
 {
