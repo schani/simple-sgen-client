@@ -41,7 +41,7 @@ main (void)
 	gsize cons_bitmap = 6;
 
 	sgen_gc_init ();
-	sgen_thread_register (&the_thread_info, &dummy);
+	sgen_thread_register (&main_thread_info, &dummy);
 
 	cons_vtable.descriptor = (mword)mono_gc_make_descr_for_object (&cons_bitmap, 2, sizeof (GCObject));
 

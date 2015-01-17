@@ -1,6 +1,7 @@
 #ifdef SGEN_DEFINE_OBJECT_VTABLE
 
 #include <pthread.h>
+#include <setjmp.h>
 
 typedef struct {
 	mword descriptor;
@@ -19,6 +20,9 @@ typedef struct {
 } GCArray;
 
 typedef struct {
+	jmp_buf registers;
+	void *stack_bottom;
+	void *stack_top;
 } SgenClientThreadInfo;
 
 #define SGEN_LOAD_VTABLE_UNCHECKED(obj)	((void*)(((GCObject*)(obj))->vtable))
@@ -48,7 +52,7 @@ typedef pthread_t MonoNativeThreadId;
 #else
 
 extern pthread_key_t thread_info_key;
-#define TLAB_ACCESS_INIT	SgenThreadInfo *__thread_info__ = pthread_getspecific (thread_info_key)
+#define TLAB_ACCESS_INIT	SgenThreadInfo *__thread_info__ = mono_thread_info_current ()
 
 typedef void* mono_native_thread_return_t;
 
@@ -64,9 +68,9 @@ mono_native_thread_create (MonoNativeThreadId *thread, mono_native_thread_return
 #define ENTER_CRITICAL_REGION
 #define EXIT_CRITICAL_REGION
 
-extern SgenThreadInfo the_thread_info;
+extern SgenThreadInfo main_thread_info;
 
-#define FOREACH_THREAD(thread)	thread = &the_thread_info;
+#define FOREACH_THREAD(thread)	thread = &main_thread_info;
 #define END_FOREACH_THREAD
 
 typedef struct

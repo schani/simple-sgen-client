@@ -26,10 +26,15 @@ SOURCES = \
 	$(MONO_DIR)/mono/metadata/gc-parse.c	\
 	$(MONO_DIR)/mono/metadata/gc-memfuncs.c	\
 	$(MONO_DIR)/mono/metadata/gc-stats.c	\
+	$(MONO_DIR)/mono/utils/mono-mutex.c	\
+	$(MONO_DIR)/mono/utils/monobitset.c	\
 	$(MONO_DIR)/mono/utils/lock-free-queue.c	\
 	$(MONO_DIR)/mono/utils/lock-free-alloc.c	\
+	$(MONO_DIR)/mono/utils/lock-free-array-queue.c	\
+	$(MONO_DIR)/mono/utils/hazard-pointer.c	\
 	simple-client.c			\
 	test-sgen.c
 
-test-sgen : $(SOURCES)
+
+test-sgen : Makefile $(SOURCES)
 	gcc -o test-sgen -Wall -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"simple-client.h\" -DSGEN_WITHOUT_MONO -O0 -g -I. -I./$(MONO_DIR)/ $(SOURCES) `pkg-config --cflags --libs glib-2.0` -lpthread -lm

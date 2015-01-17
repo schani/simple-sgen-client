@@ -1,7 +1,6 @@
 #include <glib.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <setjmp.h>
 #include <string.h>
 
 #include "mono/metadata/sgen-gc.h"
@@ -10,14 +9,24 @@
 #include "mono/metadata/gc-internal-agnostic.h"
 #include "mono/utils/hazard-pointer.h"
 
-SgenThreadInfo the_thread_info;
+SgenThreadInfo main_thread_info;
 pthread_key_t thread_info_key;
+pthread_key_t small_id_key;
+
+static void
+register_small_id (void)
+{
+	g_assert (!pthread_getspecific (small_id_key));
+	pthread_setspecific (small_id_key, (gpointer)(long)(mono_thread_small_id_alloc () + 1));
+}
 
 void
 sgen_client_init (void)
 {
 	pthread_key_create (&thread_info_key, NULL);
-	pthread_setspecific (thread_info_key, &the_thread_info);
+	pthread_key_create (&small_id_key, NULL);
+
+	register_small_id ();
 }
 
 size_t
@@ -230,17 +239,27 @@ sgen_client_valloc_aligned (size_t size, size_t alignment, gboolean activate)
 }
 
 void
+sgen_client_mprotect (void *addr, size_t size, gboolean activate)
+{
+	int result = mprotect (addr, size, activate ? PROT_READ | PROT_WRITE : PROT_NONE);
+	g_assert (!result);
+}
+
+void
 sgen_client_vfree (void *addr, size_t size)
 {
 	munmap (addr, size);
 }
 
-static void **stack_bottom;
-
 void
 sgen_client_thread_register (SgenThreadInfo* info, void *stack_bottom_fallback)
 {
-	stack_bottom = stack_bottom_fallback;
+	g_assert (info == &main_thread_info);
+
+	pthread_setspecific (thread_info_key, info);
+	//pthread_setspecific (small_id_key, (gpointer)(long)(mono_thread_small_id_alloc () + 1));
+
+	info->client_info.stack_bottom = stack_bottom_fallback;
 }
 
 void
@@ -250,29 +269,36 @@ sgen_client_thread_unregister (SgenThreadInfo *p)
 }
 
 void
-sgen_client_thread_attach (SgenThreadInfo *info)
-{
-	g_assert_not_reached ();
-}
-
-void
 sgen_client_thread_register_worker (void)
 {
-	g_assert_not_reached ();
+	register_small_id ();
 }
 
 void
 sgen_client_scan_thread_data (void *start_nursery, void *end_nursery, gboolean precise, SgenGrayQueue *queue)
 {
-	void *dummy;
-	jmp_buf registers;
+	SgenThreadInfo *info;
 
-	g_assert (stack_bottom && &dummy < stack_bottom);
+	FOREACH_THREAD (info) {
+		g_assert (info->client_info.stack_top < info->client_info.stack_bottom);
 
-	setjmp (registers);
+		sgen_conservatively_pin_objects_from (info->client_info.stack_top, info->client_info.stack_bottom, start_nursery, end_nursery, PIN_TYPE_STACK);
+		sgen_conservatively_pin_objects_from ((void**)info->client_info.registers, (void**)(((char*)info->client_info.registers) + sizeof (info->client_info.registers)), start_nursery, end_nursery, PIN_TYPE_STACK);
+	}
+}
 
-	sgen_conservatively_pin_objects_from (&dummy, stack_bottom, start_nursery, end_nursery, PIN_TYPE_STACK);
-	sgen_conservatively_pin_objects_from ((void**)registers, (void**)(((char*)registers) + sizeof (registers)), start_nursery, end_nursery, PIN_TYPE_STACK);
+SgenThreadInfo*
+mono_thread_info_current (void)
+{
+	return pthread_getspecific (thread_info_key);
+}
+
+int
+mono_thread_info_get_small_id (void)
+{
+	gpointer value = pthread_getspecific (small_id_key);
+	g_assert (value);
+	return ((int)value) - 1;
 }
 
 /* FIXME: remove */
@@ -285,6 +311,13 @@ mono_gc_register_thread (void *baseptr)
 void
 sgen_client_stop_world (int generation)
 {
+	SgenThreadInfo *info = mono_thread_info_current ();
+	void *dummy;
+
+	g_assert (info == &main_thread_info);
+
+	setjmp (info->client_info.registers);
+	info->client_info.stack_top = &dummy;
 }
 
 void
@@ -382,19 +415,16 @@ sgen_client_protocol_collection_end (int minor_gc_count, int generation, long lo
 void
 sgen_client_protocol_concurrent_start (void)
 {
-	g_assert_not_reached ();
 }
 
 void
 sgen_client_protocol_concurrent_update (void)
 {
-	g_assert_not_reached ();
 }
 
 void
 sgen_client_protocol_concurrent_finish (void)
 {
-	g_assert_not_reached ();
 }
 
 void
@@ -486,43 +516,16 @@ sgen_client_counter_register_time (const char *name, guint64 *value, gboolean mo
 }
 
 void
+sgen_client_counter_register_int (const char *name, int *value)
+{
+}
+
+void
 sgen_client_counter_register_uint64 (const char *name, guint64 *value)
 {
 }
 
 void
 sgen_client_counter_register_byte_count (const char *name, mword *value, gboolean monotonic)
-{
-}
-
-static MonoThreadHazardPointers the_hazard_pointers;
-
-gpointer
-get_hazardous_pointer (gpointer volatile *pp, MonoThreadHazardPointers *hp, int hazard_index)
-{
-	gpointer p = *pp;
-	if (!hp)
-		return p;
-	g_assert (hp == &the_hazard_pointers);
-	g_assert (hazard_index >= 0 && hazard_index < HAZARD_POINTER_COUNT);
-	hp->hazard_pointers [hazard_index] = p;
-	return p;
-}
-
-MonoThreadHazardPointers*
-mono_hazard_pointer_get (void)
-{
-	return &the_hazard_pointers;
-}
-
-void
-mono_thread_hazardous_free_or_queue (gpointer p, MonoHazardousFreeFunc free_func,
-		gboolean free_func_might_lock, gboolean lock_free_context)
-{
-	free_func (p);
-}
-
-void
-mono_thread_hazardous_try_free_some (void)
 {
 }
