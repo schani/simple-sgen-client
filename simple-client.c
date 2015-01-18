@@ -301,13 +301,6 @@ mono_thread_info_get_small_id (void)
 	return ((int)value) - 1;
 }
 
-/* FIXME: remove */
-gboolean
-mono_gc_register_thread (void *baseptr)
-{
-	return TRUE;
-}
-
 void
 sgen_client_stop_world (int generation)
 {
