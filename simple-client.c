@@ -390,116 +390,171 @@ sgen_client_print_gc_debug_usage (void)
 }
 
 void
-sgen_client_protocol_collection_requested (int generation, size_t requested_size, gboolean force)
+sgen_client_binary_protocol_collection_requested (int generation, size_t requested_size, gboolean force)
 {
 }
 
 void
-sgen_client_protocol_collection_begin (int minor_gc_count, int generation)
+sgen_client_binary_protocol_collection_begin (int minor_gc_count, int generation)
 {
 	printf ("collecting gen %d - %d\n", generation, minor_gc_count);
 }
 
 void
-sgen_client_protocol_collection_end (int minor_gc_count, int generation, long long num_objects_scanned, long long num_unique_objects_scanned)
+sgen_client_binary_protocol_collection_end (int minor_gc_count, int generation, long long num_objects_scanned, long long num_unique_objects_scanned)
 {
 }
 
 void
-sgen_client_protocol_concurrent_start (void)
+sgen_client_binary_protocol_concurrent_start (void)
 {
 }
 
 void
-sgen_client_protocol_concurrent_update (void)
+sgen_client_binary_protocol_concurrent_update (void)
 {
 }
 
 void
-sgen_client_protocol_concurrent_finish (void)
+sgen_client_binary_protocol_concurrent_finish (void)
 {
 }
 
 void
-sgen_client_protocol_world_stopping (int generation)
+sgen_client_binary_protocol_sweep_begin (int generation, int full_sweep)
 {
 }
 
 void
-sgen_client_protocol_world_stopped (int generation)
+sgen_client_binary_protocol_sweep_end (int generation, int full_sweep)
 {
 }
 
 void
-sgen_client_protocol_world_restarting (int generation)
+sgen_client_binary_protocol_world_stopping (int generation, long long timestamp)
 {
 }
 
 void
-sgen_client_protocol_world_restarted (int generation)
+sgen_client_binary_protocol_world_stopped (int generation, long long timestamp, long long total_major_cards, long long marked_major_cards, long long total_los_cards, long long marked_los_cards)
 {
 }
 
 void
-sgen_client_protocol_mark_start (int generation)
+sgen_client_binary_protocol_world_restarting (int generation, long long timestamp, long long total_major_cards, long long marked_major_cards, long long total_los_cards, long long marked_los_cards)
 {
 }
 
 void
-sgen_client_protocol_mark_end (int generation)
+sgen_client_binary_protocol_world_restarted (int generation, long long timestamp)
 {
 }
 
 void
-sgen_client_protocol_reclaim_start (int generation)
+sgen_client_binary_protocol_mark_start (int generation)
 {
 }
 
 void
-sgen_client_protocol_reclaim_end (int generation)
+sgen_client_binary_protocol_mark_end (int generation)
 {
 }
 
 void
-sgen_client_protocol_alloc (gpointer obj, gpointer vtable, size_t size, gboolean pinned)
+sgen_client_binary_protocol_reclaim_start (int generation)
 {
 }
 
 void
-sgen_client_protocol_alloc_degraded (gpointer obj, gpointer vtable, size_t size)
-{
-	g_assert_not_reached ();
-}
-
-void
-sgen_client_protocol_pin (gpointer obj, gpointer vtable, size_t size)
+sgen_client_binary_protocol_reclaim_end (int generation)
 {
 }
 
 void
-sgen_client_protocol_cement (gpointer ptr, gpointer vtable, size_t size)
-{
-	g_assert_not_reached ();
-}
-
-void
-sgen_client_protocol_copy (gpointer from, gpointer to, gpointer vtable, size_t size)
+sgen_client_binary_protocol_alloc (gpointer obj, gpointer vtable, size_t size)
 {
 }
 
 void
-sgen_client_protocol_global_remset (gpointer ptr, gpointer value, gpointer value_vtable)
+sgen_client_binary_protocol_alloc_pinned (gpointer obj, gpointer vtable, size_t size)
 {
 }
 
 void
-sgen_client_protocol_dislink_update (gpointer link, gpointer obj, gboolean track, gboolean staged)
+sgen_client_binary_protocol_alloc_degraded (gpointer obj, gpointer vtable, size_t size)
 {
 	g_assert_not_reached ();
 }
 
 void
-sgen_client_protocol_empty (gpointer start, size_t size)
+sgen_client_binary_protocol_pin (gpointer obj, gpointer vtable, size_t size)
+{
+}
+
+void
+sgen_client_binary_protocol_cement (gpointer ptr, gpointer vtable, size_t size)
+{
+	g_assert_not_reached ();
+}
+
+void
+sgen_client_binary_protocol_copy (gpointer from, gpointer to, gpointer vtable, size_t size)
+{
+}
+
+void
+sgen_client_binary_protocol_global_remset (gpointer ptr, gpointer value, gpointer value_vtable)
+{
+}
+
+void
+sgen_client_binary_protocol_dislink_update (gpointer link, gpointer obj, gboolean track, gboolean staged)
+{
+	g_assert_not_reached ();
+}
+
+void
+sgen_client_binary_protocol_empty (gpointer start, size_t size)
+{
+}
+
+void
+sgen_client_binary_protocol_thread_suspend (gpointer thread, gpointer stopped_ip)
+{
+}
+
+void
+sgen_client_binary_protocol_thread_restart (gpointer thread)
+{
+}
+
+void
+sgen_client_binary_protocol_thread_register (gpointer thread)
+{
+}
+
+void
+sgen_client_binary_protocol_thread_unregister (gpointer thread)
+{
+}
+
+void
+sgen_client_binary_protocol_missing_remset (gpointer obj, gpointer obj_vtable, int offset, gpointer value, gpointer value_vtable, gboolean value_pinned)
+{
+}
+
+void
+sgen_client_binary_protocol_cement_reset (void)
+{
+}
+
+void
+sgen_client_binary_protocol_domain_unload_begin (gpointer domain)
+{
+}
+
+void
+sgen_client_binary_protocol_domain_unload_end (gpointer domain)
 {
 }
 
