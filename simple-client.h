@@ -52,7 +52,7 @@ typedef pthread_t MonoNativeThreadId;
 #else
 
 extern pthread_key_t thread_info_key;
-#define TLAB_ACCESS_INIT	SgenThreadInfo *__thread_info__ = mono_thread_info_current ()
+#define TLAB_ACCESS_INIT	//SgenThreadInfo *__thread_info__ = mono_thread_info_current ()
 
 typedef void* mono_native_thread_return_t;
 

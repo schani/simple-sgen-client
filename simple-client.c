@@ -298,7 +298,7 @@ mono_thread_info_get_small_id (void)
 {
 	gpointer value = pthread_getspecific (small_id_key);
 	g_assert (value);
-	return ((int)value) - 1;
+	return ((int)(long)value) - 1;
 }
 
 void

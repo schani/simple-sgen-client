@@ -8,8 +8,9 @@ static GCVTable cons_vtable;
 static void
 check_list (GCObject *list, int length)
 {
+	int i;
 	GCObject *iter = list;
-	for (int i = 0; i < length - 1; ++i) {
+	for (i = 0; i < length - 1; ++i) {
 		g_assert (!iter->car);
 		g_assert (iter->cdr);
 		iter = iter->cdr;
@@ -20,9 +21,9 @@ check_list (GCObject *list, int length)
 static void
 run (void)
 {
+	int i;
 	GCObject *cons = NULL;
-
-	for (int i = 0; i < LIST_LENGTH; ++i) {
+	for (i = 0; i < LIST_LENGTH; ++i) {
 		GCObject *new = sgen_alloc_obj (&cons_vtable, sizeof (GCObject));
 		g_assert (new->vtable == &cons_vtable);
 		g_assert (!new->car && !new->cdr);
