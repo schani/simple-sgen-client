@@ -11,7 +11,7 @@
 
 SgenThreadInfo main_thread_info;
 pthread_key_t thread_info_key;
-pthread_key_t small_id_key;
+static pthread_key_t small_id_key;
 
 static void
 register_small_id (void)
@@ -29,15 +29,9 @@ sgen_client_init (void)
 	register_small_id ();
 }
 
-size_t
-sgen_client_vtable_get_instance_size (GCVTable *vtable)
-{
-	return sgen_client_slow_object_get_size (vtable, NULL);
-}
-
 static GCVTable array_fill_vtable;
 
-GCVTable*
+static GCVTable*
 sgen_client_get_array_fill_vtable (void)
 {
 	static gboolean inited = FALSE;
@@ -78,12 +72,6 @@ gboolean
 sgen_client_object_is_array_fill (GCObject *o)
 {
 	return o->vtable == sgen_client_get_array_fill_vtable ();
-}
-
-void
-sgen_client_object_register_finalizer_if_necessary (GCObject *obj)
-{
-	g_assert_not_reached ();
 }
 
 gboolean
@@ -177,12 +165,6 @@ sgen_client_out_of_memory (size_t size)
 
 const
 char* sgen_client_description_for_internal_mem_type (int type)
-{
-	g_assert_not_reached ();
-}
-
-const char*
-sgen_client_object_safe_name (GCObject *obj)
 {
 	g_assert_not_reached ();
 }
