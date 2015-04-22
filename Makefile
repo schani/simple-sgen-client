@@ -21,6 +21,7 @@ SOURCES = \
 	$(MONO_DIR)/mono/metadata/sgen-pinning-stats.c	\
 	$(MONO_DIR)/mono/metadata/sgen-protocol.c	\
 	$(MONO_DIR)/mono/metadata/sgen-workers.c	\
+	$(MONO_DIR)/mono/metadata/sgen-thread-pool.c	\
 	$(MONO_DIR)/mono/metadata/sgen-memory-governor.c	\
 	$(MONO_DIR)/mono/metadata/sgen-debug.c	\
 	$(MONO_DIR)/mono/metadata/gc-parse.c	\

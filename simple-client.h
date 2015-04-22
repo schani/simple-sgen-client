@@ -52,7 +52,11 @@ typedef pthread_t MonoNativeThreadId;
 #else
 
 extern pthread_key_t thread_info_key;
-#define TLAB_ACCESS_INIT	//SgenThreadInfo *__thread_info__ = mono_thread_info_current ()
+#ifdef HAVE_KW_THREAD
+#define TLAB_ACCESS_INIT
+#else
+#define TLAB_ACCESS_INIT	SgenThreadInfo *__thread_info__ G_GNUC_UNUSED = mono_thread_info_current ()
+#endif
 
 typedef void* mono_native_thread_return_t;
 
@@ -68,50 +72,15 @@ mono_native_thread_create (MonoNativeThreadId *thread, mono_native_thread_return
 #define ENTER_CRITICAL_REGION
 #define EXIT_CRITICAL_REGION
 
+#define MONO_TRY_BLOCKING {
+#define MONO_FINISH_TRY_BLOCKING }
+
+#define mono_gc_printf	fprintf
+
 extern SgenThreadInfo main_thread_info;
 
 #define FOREACH_THREAD(thread)	thread = &main_thread_info;
 #define END_FOREACH_THREAD
-
-typedef struct
-{
-	int value;
-	GMutex access;
-	GCond sig;
-} SgenSemaphore;
-
-static inline void
-SGEN_SEMAPHORE_INIT (SgenSemaphore *sem, int initial)
-{
-	g_assert (g_thread_supported ());
-
-	sem->value = initial;
-	g_mutex_init (&sem->access);
-	g_cond_init (&sem->sig);
-}
-
-static inline void
-SGEN_SEMAPHORE_POST (SgenSemaphore* sem)
-{
-	g_assert (sem);
-
-	g_mutex_lock (&sem->access);
-	++sem->value;
-	g_mutex_unlock (&sem->access);
-	g_cond_signal (&sem->sig);
-}
-
-static inline void
-SGEN_SEMAPHORE_WAIT (SgenSemaphore* sem)
-{
-	g_assert (sem);
-
-	g_mutex_lock (&sem->access);
-	while (sem->value < 1)
-		g_cond_wait (&sem->sig, &sem->access);
-	--sem->value;
-	g_mutex_unlock (&sem->access);
-}
 
 #include <sys/time.h>
 
@@ -126,6 +95,49 @@ SGEN_TV_ELAPSED (struct timeval a, struct timeval b)
 	elapsed -= a.tv_usec;
 	return elapsed * 10;
 }
+
+#include <unistd.h>
+
+static inline size_t
+mono_pagesize (void)
+{
+	return getpagesize ();
+}
+
+static inline int
+mono_process_current_pid (void)
+{
+	return getpid ();
+}
+
+#include <sys/mman.h>
+
+enum {
+	MONO_MMAP_NONE = 0,
+	MONO_MMAP_READ = 1,
+	MONO_MMAP_WRITE = 2,
+	MONO_MMAP_PRIVATE = 4,
+	MONO_MMAP_ANON = 8
+};
+
+void* mono_valloc     (void *addr, size_t length, int flags);
+void* mono_valloc_aligned (size_t length, size_t alignment, int flags);
+int   mono_vfree      (void *addr, size_t length);
+int   mono_mprotect   (void *addr, size_t length, int flags);
+
+enum {
+	MONO_COUNTER_INT,
+	MONO_COUNTER_WORD,     /* pointer-sized int */
+	MONO_COUNTER_ULONG,    /* 64 bit uint */
+	MONO_COUNTER_JIT       = 1 << 8,
+	MONO_COUNTER_GC        = 1 << 9,
+	MONO_COUNTER_BYTES     = 1 << 24, /* Quantity of bytes. RSS, active heap, etc */
+	MONO_COUNTER_TIME      = 2 << 24,  /* Time interval in 100ns units. Minor pause, JIT compilation*/
+	MONO_COUNTER_MONOTONIC = 1 << 28, /* This counter value always increase/decreases over time. Reported by --stat. */
+	MONO_COUNTER_VARIABLE  = 1 << 30, /* This counter value can be anything on each sampling. Only interesting when sampling. */
+};
+
+void mono_counters_register (const char* descr, int type, void *addr);
 
 enum {
 	INTERNAL_MEM_MAX = INTERNAL_MEM_FIRST_CLIENT

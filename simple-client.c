@@ -110,7 +110,7 @@ sgen_client_clear_unreachable_ephemerons (ScanCopyContext ctx)
 }
 
 gboolean
-sgen_client_cardtable_scan_object (char *obj, mword block_obj_size, guint8 *cards, gboolean mod_union, SgenGrayQueue *queue)
+sgen_client_cardtable_scan_object (char *obj, mword block_obj_size, guint8 *cards, gboolean mod_union, ScanCopyContext ctx)
 {
 	g_assert_not_reached ();
 }
@@ -186,18 +186,23 @@ sgen_client_pre_collection_checks (void)
 {
 }
 
-size_t
-sgen_client_page_size (void)
+static int
+prot_from_flags (int flags)
 {
-	return getpagesize ();
+	int prot = PROT_NONE;
+	if (flags & MONO_MMAP_READ)
+		prot |= PROT_READ;
+	if (flags & MONO_MMAP_WRITE)
+		prot |= PROT_WRITE;
+	return prot;
 }
 
 void*
-sgen_client_valloc (size_t size, gboolean activate)
+mono_valloc (void *addr, size_t length, int flags)
 {
-	char *p = mmap (NULL, size, activate ? PROT_READ | PROT_WRITE : PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	g_assert (p);
-	return p;
+	int mflags = MAP_ANON | MAP_PRIVATE;
+	int prot = prot_from_flags (flags);
+	return mmap (addr, length, prot, mflags, -1, 0);
 }
 
 static char*
@@ -209,28 +214,27 @@ aligned_address (char *mem, size_t size, size_t alignment)
 }
 
 void*
-sgen_client_valloc_aligned (size_t size, size_t alignment, gboolean activate)
+mono_valloc_aligned (size_t length, size_t alignment, int flags)
 {
-	char *p = sgen_client_valloc (size + alignment, activate);
-	char *aligned = aligned_address (p, size, alignment);
+	char *p = mono_valloc (NULL, length + alignment, flags);
+	char *aligned = aligned_address (p, length, alignment);
 	if (aligned != p)
-		sgen_client_vfree (p, aligned - p);
-	if (aligned + size != p + size + alignment)
-		sgen_client_vfree (aligned + size, p + alignment - aligned);
+		mono_vfree (p, aligned - p);
+	if (aligned + length != p + length + alignment)
+		mono_vfree (aligned + length, p + alignment - aligned);
 	return aligned;
 }
 
-void
-sgen_client_mprotect (void *addr, size_t size, gboolean activate)
+int
+mono_vfree (void *addr, size_t length)
 {
-	int result = mprotect (addr, size, activate ? PROT_READ | PROT_WRITE : PROT_NONE);
-	g_assert (!result);
+	return munmap (addr, length);
 }
 
-void
-sgen_client_vfree (void *addr, size_t size)
+int
+mono_mprotect   (void *addr, size_t length, int flags)
 {
-	munmap (addr, size);
+	return mprotect (addr, length, prot_from_flags (flags));
 }
 
 void
@@ -257,7 +261,7 @@ sgen_client_thread_register_worker (void)
 }
 
 void
-sgen_client_scan_thread_data (void *start_nursery, void *end_nursery, gboolean precise, SgenGrayQueue *queue)
+sgen_client_scan_thread_data (void *start_nursery, void *end_nursery, gboolean precise, ScanCopyContext ctx)
 {
 	SgenThreadInfo *info;
 
@@ -344,6 +348,16 @@ sgen_client_bridge_register_finalized_object (GCObject *object)
 
 void
 sgen_client_log_timing (GGTimingInfo *info, mword last_major_num_sections, mword last_los_memory_usage)
+{
+}
+
+void
+sgen_client_mark_togglerefs (char *start, char *end, ScanCopyContext ctx)
+{
+}
+
+void
+sgen_client_clear_togglerefs (char *start, char *end, ScanCopyContext ctx)
 {
 }
 
@@ -537,6 +551,11 @@ sgen_client_binary_protocol_domain_unload_begin (gpointer domain)
 
 void
 sgen_client_binary_protocol_domain_unload_end (gpointer domain)
+{
+}
+
+void
+mono_counters_register (const char* descr, int type, void *addr)
 {
 }
 
