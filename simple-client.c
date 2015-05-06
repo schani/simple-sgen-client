@@ -3,10 +3,10 @@
 #include <sys/mman.h>
 #include <string.h>
 
-#include "mono/metadata/sgen-gc.h"
-#include "mono/metadata/sgen-client.h"
-#include "mono/metadata/sgen-pinning.h"
-#include "mono/metadata/gc-internal-agnostic.h"
+#include "mono/sgen/sgen-gc.h"
+#include "mono/sgen/sgen-client.h"
+#include "mono/sgen/sgen-pinning.h"
+#include "mono/sgen/gc-internal-agnostic.h"
 #include "mono/utils/hazard-pointer.h"
 
 SgenThreadInfo main_thread_info;
@@ -30,6 +30,12 @@ sgen_client_init (void)
 }
 
 static GCVTable array_fill_vtable;
+
+gpointer
+sgen_client_get_provenance (void)
+{
+	return NULL;
+}
 
 static GCVTable*
 sgen_client_get_array_fill_vtable (void)
@@ -427,7 +433,7 @@ sgen_client_binary_protocol_sweep_end (int generation, int full_sweep)
 }
 
 void
-sgen_client_binary_protocol_world_stopping (int generation, long long timestamp)
+sgen_client_binary_protocol_world_stopping (int generation, long long timestamp, gpointer thread)
 {
 }
 
@@ -467,17 +473,17 @@ sgen_client_binary_protocol_reclaim_end (int generation)
 }
 
 void
-sgen_client_binary_protocol_alloc (gpointer obj, gpointer vtable, size_t size)
+sgen_client_binary_protocol_alloc (gpointer obj, gpointer vtable, size_t size, gpointer provenance)
 {
 }
 
 void
-sgen_client_binary_protocol_alloc_pinned (gpointer obj, gpointer vtable, size_t size)
+sgen_client_binary_protocol_alloc_pinned (gpointer obj, gpointer vtable, size_t size, gpointer provenance)
 {
 }
 
 void
-sgen_client_binary_protocol_alloc_degraded (gpointer obj, gpointer vtable, size_t size)
+sgen_client_binary_protocol_alloc_degraded (gpointer obj, gpointer vtable, size_t size, gpointer provenance)
 {
 	g_assert_not_reached ();
 }
