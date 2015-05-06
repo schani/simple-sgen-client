@@ -1,5 +1,5 @@
-#include "mono/metadata/sgen-gc.h"
-#include "mono/metadata/gc-internal-agnostic.h"
+#include "mono/sgen/sgen-gc.h"
+#include "mono/sgen/gc-internal-agnostic.h"
 
 static GCVTable cons_vtable;
 

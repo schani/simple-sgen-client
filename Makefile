@@ -3,29 +3,29 @@ all : test-sgen
 MONO_DIR = mono
 
 SOURCES = \
-	$(MONO_DIR)/mono/metadata/sgen-gc.c		\
-	$(MONO_DIR)/mono/metadata/sgen-alloc.c	\
-	$(MONO_DIR)/mono/metadata/sgen-nursery-allocator.c	\
-	$(MONO_DIR)/mono/metadata/sgen-simple-nursery.c	\
-	$(MONO_DIR)/mono/metadata/sgen-split-nursery.c	\
-	$(MONO_DIR)/mono/metadata/sgen-marksweep.c	\
-	$(MONO_DIR)/mono/metadata/sgen-los.c	\
-	$(MONO_DIR)/mono/metadata/sgen-cardtable.c	\
-	$(MONO_DIR)/mono/metadata/sgen-descriptor.c	\
-	$(MONO_DIR)/mono/metadata/sgen-fin-weak-hash.c	\
-	$(MONO_DIR)/mono/metadata/sgen-gray.c	\
-	$(MONO_DIR)/mono/metadata/sgen-pointer-queue.c	\
-	$(MONO_DIR)/mono/metadata/sgen-internal.c	\
-	$(MONO_DIR)/mono/metadata/sgen-hash-table.c	\
-	$(MONO_DIR)/mono/metadata/sgen-pinning.c	\
-	$(MONO_DIR)/mono/metadata/sgen-pinning-stats.c	\
-	$(MONO_DIR)/mono/metadata/sgen-protocol.c	\
-	$(MONO_DIR)/mono/metadata/sgen-workers.c	\
-	$(MONO_DIR)/mono/metadata/sgen-thread-pool.c	\
-	$(MONO_DIR)/mono/metadata/sgen-memory-governor.c	\
-	$(MONO_DIR)/mono/metadata/sgen-debug.c	\
-	$(MONO_DIR)/mono/metadata/gc-parse.c	\
-	$(MONO_DIR)/mono/metadata/gc-memfuncs.c	\
+	$(MONO_DIR)/mono/sgen/sgen-gc.c		\
+	$(MONO_DIR)/mono/sgen/sgen-alloc.c	\
+	$(MONO_DIR)/mono/sgen/sgen-nursery-allocator.c	\
+	$(MONO_DIR)/mono/sgen/sgen-simple-nursery.c	\
+	$(MONO_DIR)/mono/sgen/sgen-split-nursery.c	\
+	$(MONO_DIR)/mono/sgen/sgen-marksweep.c	\
+	$(MONO_DIR)/mono/sgen/sgen-los.c	\
+	$(MONO_DIR)/mono/sgen/sgen-cardtable.c	\
+	$(MONO_DIR)/mono/sgen/sgen-descriptor.c	\
+	$(MONO_DIR)/mono/sgen/sgen-fin-weak-hash.c	\
+	$(MONO_DIR)/mono/sgen/sgen-gray.c	\
+	$(MONO_DIR)/mono/sgen/sgen-pointer-queue.c	\
+	$(MONO_DIR)/mono/sgen/sgen-internal.c	\
+	$(MONO_DIR)/mono/sgen/sgen-hash-table.c	\
+	$(MONO_DIR)/mono/sgen/sgen-pinning.c	\
+	$(MONO_DIR)/mono/sgen/sgen-pinning-stats.c	\
+	$(MONO_DIR)/mono/sgen/sgen-protocol.c	\
+	$(MONO_DIR)/mono/sgen/sgen-workers.c	\
+	$(MONO_DIR)/mono/sgen/sgen-thread-pool.c	\
+	$(MONO_DIR)/mono/sgen/sgen-memory-governor.c	\
+	$(MONO_DIR)/mono/sgen/sgen-debug.c	\
+	$(MONO_DIR)/mono/utils/parse.c	\
+	$(MONO_DIR)/mono/utils/memfuncs.c	\
 	$(MONO_DIR)/mono/metadata/gc-stats.c	\
 	$(MONO_DIR)/mono/utils/mono-mutex.c	\
 	$(MONO_DIR)/mono/utils/monobitset.c	\
