@@ -1,7 +1,7 @@
 #include "mono/sgen/sgen-gc.h"
 #include "mono/sgen/gc-internal-agnostic.h"
 
-static GCVTable cons_vtable;
+static VTable cons_vtable;
 
 #define LIST_LENGTH	100000000
 

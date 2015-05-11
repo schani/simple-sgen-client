@@ -1,55 +1,104 @@
+/*
+ * This file is included twice, first with `SGEN_DEFINE_OBJECT_VTABLE`
+ * defined, the second time without.
+ */
+
 #ifdef SGEN_DEFINE_OBJECT_VTABLE
 
-#include <pthread.h>
-#include <setjmp.h>
-
-typedef struct {
+/*
+ * The first word of an object is a `GCVTable`.  Usually that's a
+ * pointer to a vtable structure.
+ *
+ * Note that a valid vtable cannot be NULL.
+ */
+typedef struct _VTable VTable;
+typedef VTable* GCVTable;
+struct _VTable {
 	mword descriptor;
-} GCVTable;
+};
 
+/*
+ * All our objects have the same layout - they're cons pairs.
+ */
 typedef struct _GCObject GCObject;
 struct _GCObject {
-	GCVTable *vtable;
+	GCVTable vtable;
 	GCObject *car;
 	GCObject *cdr;
 };
 
+/*
+ * Actually, we do have a second kind of object, namely an array.
+ * This type of object is not used by our application but by SGen
+ * internally, to fill small holes in the nursery so that it is easily
+ * walkable.
+ */
 typedef struct {
-	GCVTable *vtable;
+	GCVTable vtable;
 	size_t size;
 } GCArray;
 
+/*
+ * This is how we get an object's vtable.
+ */
+static inline GCVTable
+SGEN_LOAD_VTABLE_UNCHECKED (GCObject *obj)
+{
+	return obj->vtable;
+}
+
+/*
+ * This is how we get the GC descriptor from a vtable.
+ *
+ * If you don't need to store any additional information in the vtable
+ * structure, you could typedef `GCVTable` to be `mword` and use the
+ * descriptor as the vtable instead of getting it through an
+ * indirection.
+ */
+static inline mword
+sgen_vtable_get_descriptor (GCVTable vtable)
+{
+	return vtable->descriptor;
+}
+
+#include <setjmp.h>
+
+/*
+ * This is information we maintain for each thread.  The least we need
+ * to be able to do is to scan its stack and registers.
+ */
 typedef struct {
 	jmp_buf registers;
 	void *stack_bottom;
 	void *stack_top;
 } SgenClientThreadInfo;
 
-#define SGEN_LOAD_VTABLE_UNCHECKED(obj)	((void*)(((GCObject*)(obj))->vtable))
+#else
 
-static inline mword
-sgen_vtable_get_descriptor (GCVTable *vtable)
-{
-	return vtable->descriptor;
-}
-
+/*
+ * The object size slow path.  Our object size calculation is trivial,
+ * so we only implement it once, here.
+ */
 static mword
-sgen_client_slow_object_get_size (GCVTable *vtable, GCObject* o)
+sgen_client_slow_object_get_size (GCVTable vtable, GCObject* o)
 {
 	if ((vtable->descriptor & DESC_TYPE_MASK) == DESC_TYPE_VECTOR)
 		return ((GCArray*)o)->size;
 	return sizeof (GCObject);
 }
 
-static MONO_NEVER_INLINE mword
-sgen_client_par_object_get_size (GCVTable *vtable, GCObject* o)
+/*
+ * This is the object size fastpath.
+ */
+static mword
+sgen_client_par_object_get_size (GCVTable vtable, GCObject* o)
 {
 	return sgen_client_slow_object_get_size (vtable, o);
 }
 
-typedef pthread_t MonoNativeThreadId;
+#include <pthread.h>
 
-#else
+typedef pthread_t MonoNativeThreadId;
 
 extern pthread_key_t thread_info_key;
 #ifdef HAVE_KW_THREAD
@@ -147,7 +196,7 @@ enum {
 #define SGEN_CLIENT_MINIMUM_OBJECT_SIZE		(sizeof (GCObject))
 
 static inline size_t
-sgen_client_array_element_size (GCVTable *gc_vtable)
+sgen_client_array_element_size (GCVTable gc_vtable)
 {
 	g_assert_not_reached ();
 }
@@ -165,12 +214,12 @@ sgen_client_array_length (GCObject *obj)
 }
 
 static inline void
-sgen_client_pre_copy_checks (char *destination, GCVTable *gc_vtable, void *obj, mword objsize)
+sgen_client_pre_copy_checks (char *destination, GCVTable gc_vtable, void *obj, mword objsize)
 {
 }
 
 static inline void
-sgen_client_update_copied_object (char *destination, GCVTable *gc_vtable, void *obj, mword objsize)
+sgen_client_update_copied_object (char *destination, GCVTable gc_vtable, void *obj, mword objsize)
 {
 }
 

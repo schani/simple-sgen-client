@@ -29,7 +29,7 @@ sgen_client_init (void)
 	register_small_id ();
 }
 
-static GCVTable array_fill_vtable;
+static VTable array_fill_vtable;
 
 gpointer
 sgen_client_get_provenance (void)
@@ -37,7 +37,12 @@ sgen_client_get_provenance (void)
 	return NULL;
 }
 
-static GCVTable*
+void
+sgen_client_describe_invalid_pointer (GCObject *ptr)
+{
+}
+
+static GCVTable
 sgen_client_get_array_fill_vtable (void)
 {
 	static gboolean inited = FALSE;
@@ -116,7 +121,7 @@ sgen_client_clear_unreachable_ephemerons (ScanCopyContext ctx)
 }
 
 gboolean
-sgen_client_cardtable_scan_object (char *obj, mword block_obj_size, guint8 *cards, gboolean mod_union, ScanCopyContext ctx)
+sgen_client_cardtable_scan_object (GCObject *obj, mword block_obj_size, guint8 *cards, gboolean mod_union, ScanCopyContext ctx)
 {
 	g_assert_not_reached ();
 }
@@ -137,7 +142,7 @@ sgen_client_collecting_major_1 (void)
 }
 
 void
-sgen_client_pinned_los_object (char *obj)
+sgen_client_pinned_los_object (GCObject *obj)
 {
 	g_assert_not_reached ();
 }
@@ -176,13 +181,13 @@ char* sgen_client_description_for_internal_mem_type (int type)
 }
 
 const char*
-sgen_client_vtable_get_namespace (GCVTable *vtable)
+sgen_client_vtable_get_namespace (GCVTable vtable)
 {
 	g_assert_not_reached ();
 }
 
 const char*
-sgen_client_vtable_get_name (GCVTable *vtable)
+sgen_client_vtable_get_name (GCVTable vtable)
 {
 	g_assert_not_reached ();
 }
