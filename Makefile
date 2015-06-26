@@ -1,8 +1,8 @@
-all : test-sgen
+all : test-sgen scheme
 
 MONO_DIR = mono
 
-SOURCES = \
+SGEN_SOURCES = \
 	$(MONO_DIR)/mono/sgen/sgen-gc.c		\
 	$(MONO_DIR)/mono/sgen/sgen-alloc.c	\
 	$(MONO_DIR)/mono/sgen/sgen-nursery-allocator.c	\
@@ -33,9 +33,20 @@ SOURCES = \
 	$(MONO_DIR)/mono/utils/lock-free-alloc.c	\
 	$(MONO_DIR)/mono/utils/lock-free-array-queue.c	\
 	$(MONO_DIR)/mono/utils/hazard-pointer.c	\
+	client-common.c
+
+TEST_SOURCES = \
+	$(SGEN_SOURCES)			\
 	simple-client.c			\
 	test-sgen.c
 
+SCHEME_SOURCES = \
+	$(SGEN_SOURCES)			\
+	scheme-client.c			\
+	scheme.c
 
-test-sgen : Makefile $(SOURCES)
-	gcc -std=gnu99 -o test-sgen -Wall -Wno-attributes -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"simple-client.h\" -DSGEN_WITHOUT_MONO -O0 -g -I. -I./$(MONO_DIR)/ $(SOURCES) `pkg-config --cflags --libs glib-2.0` -lpthread -lm
+test-sgen : Makefile $(TEST_SOURCES) simple-client.h
+	gcc -std=gnu99 -o test-sgen -Wall -Wno-attributes -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"simple-client.h\" -DSGEN_WITHOUT_MONO -O0 -g -I. -I./$(MONO_DIR)/ $(TEST_SOURCES) `pkg-config --cflags --libs glib-2.0` -lpthread -lm
+
+scheme : Makefile $(SCHEME_SOURCES) scheme-client.h
+	gcc -std=gnu99 -o scheme -Wall -Wno-attributes -DHAVE_SGEN_GC -DSGEN_CLIENT_HEADER=\"scheme-client.h\" -DSGEN_WITHOUT_MONO -O2 -g -I. -I./$(MONO_DIR)/ $(SCHEME_SOURCES) `pkg-config --cflags --libs glib-2.0` -lpthread -lm
