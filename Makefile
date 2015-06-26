@@ -1,4 +1,9 @@
-all : test-sgen scheme
+TARGETS = test-sgen scheme
+
+all : $(TARGETS)
+
+clean :
+	rm -f $(TARGETS)
 
 MONO_DIR = mono
 
